@@ -13,7 +13,7 @@
             />
           </div>
         </div>
-        <button class="scan-button">Scan</button>
+        <button class="scan-button">Add Devices</button>
       </div>
     </div>
     <div class="history-container">
