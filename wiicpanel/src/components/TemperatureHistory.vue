@@ -1,6 +1,6 @@
 <template>
   <div class="line-chart-container">
-    <h2>{{ deviceName }}</h2>
+    <h2>{{ deviceName.deviceId }} Temperature History</h2>
     <canvas ref="lineChartCanvas"></canvas>
   </div>
 </template>
@@ -16,6 +16,7 @@ export default {
   props: {
     temperatureData: Array, // Temperature data from App.vue
     deviceName: String, // Name of the selected device
+    deviceId: String, // Add this prop to receive deviceId
   },
   setup(props) {
     const lineChartCanvas = ref(null);
@@ -27,7 +28,7 @@ export default {
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: generateTimeLabels(), // Generate time labels
+          labels: [], // Initialize with empty labels
           datasets: [
             {
               label: 'Temperature',
@@ -63,23 +64,19 @@ export default {
     watch(() => props.temperatureData, (newData) => {
       // Check if chart is defined before updating
       if (chart) {
+        chart.data.labels = generateTimeLabels(newData);
         chart.data.datasets[0].data = newData;
         chart.update();
       }
     });
 
-    function generateTimeLabels() {
-      const labels = [];
-      const now = new Date();
-
-      for (let i = 0; i < 5; i++) {
-        const time = new Date(now - i * 3600 * 1000); // Subtract hours
+    function generateTimeLabels(data) {
+      return data.map((log) => {
+        const time = new Date(log.timeStamp);
         const hours = time.getHours().toString().padStart(2, '0');
         const minutes = time.getMinutes().toString().padStart(2, '0');
-        labels.unshift(`${hours}:${minutes}`);
-      }
-
-      return labels;
+        return `${hours}:${minutes}`;
+      });
     }
 
     return {

@@ -6,9 +6,9 @@
         <div class="iot-boxes">
           <div class="iot-box" v-for="(device, index) in devices" :key="index">
             <IoTDevice
-              :deviceName="device.deviceName"
-              :currentTemperature="device.currentTemperature"
-              :currentHumidity="device.currentHumidity"
+              :deviceId="device.ardMAC"
+              :deviceName="device.name"
+              :deviceLogs="device.logs"
               @select-device="handleDeviceSelect"
             />
           </div>
@@ -37,57 +37,98 @@
 </template>
 
 <script>
-import IoTDevice from "@/components/IoTDevice.vue"; // Adjust the import path as needed
-import TemperatureHistory from "@/components/TemperatureHistory.vue"; // Adjust the import path as needed
-import HumidityHistory from "@/components/HumidityHistory.vue"; // Adjust the import path as needed
+import IoTDevice from "@/components/IoTDevice.vue";
+import TemperatureHistory from "@/components/TemperatureHistory.vue";
+import HumidityHistory from "@/components/HumidityHistory.vue";
+import ApiService from "@/components/ApiService.vue";
 
 export default {
   data() {
     return {
-      devices: [
-        {
-          deviceName: "Device 1",
-          temperature: [25.5, 25.6, 25.4, 25.8, 25.7],
-          humidity: [55, 56, 54, 58, 57],
-          currentTemperature: 25.7,
-          currentHumidity: 57,
-        },
-        {
-          deviceName: "Device 2",
-          temperature: [22.8, 22.9, 23.1, 22.7, 22.5],
-          humidity: [60, 61, 59, 62, 58],
-          currentTemperature: 22.5,
-          currentHumidity: 58,
-        },
-        {
-          deviceName: "Device 3",
-          temperature: [24.1, 24.2, 24.3, 24.0, 24.5],
-          humidity: [58, 59, 57, 60, 61],
-          currentTemperature: 24.5,
-          currentHumidity: 61,
-        },
-        // Add more devices as needed
-      ],
-      selectedDeviceName: "", // Store the selected device name
+      devices: [],
+      selectedDeviceName: "",
     };
   },
   computed: {
+    selectedDevice() {
+      return this.devices.find((device) => device.name === this.selectedDeviceName);
+    },
     selectedDeviceTemperatureData() {
-      return this.getSelectedDevice()?.temperature || [];
+      return this.selectedDevice?.logs?.map((log) => log.temperature) || [];
     },
     selectedDeviceHumidityData() {
-      return this.getSelectedDevice()?.humidity || [];
+      return this.selectedDevice?.logs?.map((log) => log.humidity) || [];
     },
   },
   methods: {
-    handleDeviceSelect(selectedDevice) {
-      // Handle the device selection here
-      console.log(`Selected device: ${selectedDevice}`);
+    async handleDeviceSelect(selectedDevice) {
       this.selectedDeviceName = selectedDevice;
     },
-    getSelectedDevice() {
-      return this.devices.find((device) => device.deviceName === this.selectedDeviceName);
+    async fetchDevices() {
+      try {
+        // Make an API call to fetch devices
+        const devices = await ApiService.DeviceApiService.getAllDevices();
+        this.devices = devices;
+
+        // Fetch the latest temperature and humidity data for each device
+        for (const device of this.devices) {
+          await this.fetchDeviceData(device);
+        }
+      } catch (error) {
+        console.error("Error fetching devices:", error);
+      }
     },
+    async fetchDeviceData(device) {
+      try {
+        const logs = await ApiService.DeviceLogApiService.getDeviceLogs(device.ardMAC); // Use ardMAC
+
+        if (logs.length > 0) {
+          // Assign the logs to the device
+          device.logs = logs;
+
+          // Update the selected device's temperature and humidity data
+          if (device.name === this.selectedDeviceName) {
+            this.selectedDeviceTemperatureData = logs.map((log) => log.temperature);
+            this.selectedDeviceHumidityData = logs.map((log) => log.humidity);
+          }
+
+          console.log("Logs for " + device.ardMAC + ":", logs);
+        } else {
+          // Handle the case where no logs exist for the device
+          device.logs = [];
+        }
+      } catch (error) {
+        console.error("Error fetching device data for " + device.ardMAC + ":", error);
+      }
+    },
+    latestTemperature(device) {
+      if (device.logs && device.logs.length > 0) {
+        const mostRecentLog = device.logs[device.logs.length - 1];
+        return mostRecentLog.temperature || 0;
+      }
+      return 0;
+    },
+    latestHumidity(device) {
+      if (device.logs && device.logs.length > 0) {
+        const mostRecentLog = device.logs[device.logs.length - 1];
+        return mostRecentLog.humidity || 0;
+      }
+      return 0;
+    },
+    startDataRefreshInterval() {
+      this.fetchDevices(); // Fetch data immediately
+
+      // Set an interval to fetch data every 5 seconds (adjust the interval as needed)
+      this.dataRefreshInterval = setInterval(() => {
+        this.fetchDevices();
+      }, 5000); // 5 seconds in milliseconds
+    },
+  },
+  created() {
+    this.startDataRefreshInterval(); // Start the data refresh interval when the component is created
+  },
+  beforeUnmount() {
+    clearInterval(this.dataRefreshInterval); // Clear the interval when the component is unmounted
   },
   components: {
     IoTDevice,
