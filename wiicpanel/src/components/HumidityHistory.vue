@@ -32,7 +32,7 @@ export default {
           labels: generateTimeLabels(props.timeLabels), // Set the labels to the time labels
           datasets: [
             {
-              label: 'Temperature',
+              label: 'Humidity',
               data: props.humidityData, // Use the humidityData prop
               borderColor: 'rgb(255, 99, 132)',
               borderWidth: 2,
@@ -53,7 +53,7 @@ export default {
             y: {
               title: {
                 display: true,
-                text: 'Temperature (°C)',
+                text: 'Humidity (%)',
               },
             },
           },
