@@ -1,6 +1,6 @@
 <template>
   <div class="line-chart-container">
-    <h2>{{ deviceName.deviceId }} Temperature History</h2>
+    <h2>Temperature History</h2>
     <canvas ref="lineChartCanvas"></canvas>
   </div>
 </template>
@@ -15,12 +15,14 @@ Chart.register(...registerables);
 export default {
   props: {
     temperatureData: Array, // Temperature data from App.vue
+    timeLabels: Array, // Time labels from App.vue
     deviceName: String, // Name of the selected device
     deviceId: String, // Add this prop to receive deviceId
   },
   setup(props) {
     const lineChartCanvas = ref(null);
     let chart = null; // Define chart variable
+    console.log('Time Labels:', props.timeLabels);
 
     onMounted(() => {
       const ctx = lineChartCanvas.value;
@@ -28,7 +30,7 @@ export default {
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: [], // Initialize with empty labels
+          labels: generateTimeLabels(props.timeLabels), // Use the time labels formatted with generateTimeLabels
           datasets: [
             {
               label: 'Temperature',
@@ -61,18 +63,18 @@ export default {
     });
 
     // Watch for changes in temperatureData prop
-    watch(() => props.temperatureData, (newData) => {
+    watch(() => [props.temperatureData, props.timeLabels], ([newTemperatureData, newTimeLabels]) => {
       // Check if chart is defined before updating
       if (chart) {
-        chart.data.labels = generateTimeLabels(newData);
-        chart.data.datasets[0].data = newData;
+        chart.data.labels = generateTimeLabels(newTimeLabels); // Update the labels with formatted time labels
+        chart.data.datasets[0].data = newTemperatureData;
         chart.update();
       }
     });
 
     function generateTimeLabels(data) {
-      return data.map((log) => {
-        const time = new Date(log.timeStamp);
+      return data.map((timestamp) => {
+        const time = new Date(timestamp);
         const hours = time.getHours().toString().padStart(2, '0');
         const minutes = time.getMinutes().toString().padStart(2, '0');
         return `${hours}:${minutes}`;

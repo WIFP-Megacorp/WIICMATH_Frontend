@@ -14,11 +14,14 @@ Chart.register(...registerables);
 export default {
   props: {
     humidityData: Array, // Humidity data from App.vue
+    timeLabels: Array, // Time labels from App.vue
     deviceName: String, // Name of the selected device
+    deviceId: String, // Add this prop to receive deviceId
   },
   setup(props) {
     const lineChartCanvas = ref(null);
     let chart = null; // Define chart variable
+    console.log('Time Labels:', props.timeLabels);
 
     onMounted(() => {
       const ctx = lineChartCanvas.value;
@@ -26,10 +29,10 @@ export default {
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: [], // Initialize with empty labels
+          labels: generateTimeLabels(props.timeLabels), // Set the labels to the time labels
           datasets: [
             {
-              label: 'Humidity',
+              label: 'Temperature',
               data: props.humidityData, // Use the humidityData prop
               borderColor: 'rgb(255, 99, 132)',
               borderWidth: 2,
@@ -50,7 +53,7 @@ export default {
             y: {
               title: {
                 display: true,
-                text: 'Humidity (%)',
+                text: 'Temperature (°C)',
               },
             },
           },
@@ -59,18 +62,18 @@ export default {
     });
 
     // Watch for changes in humidityData prop
-    watch(() => props.humidityData, (newData) => {
+    watch(() => [props.humidityData, props.timeLabels], ([newhumidityData, newTimeLabels]) => {
       // Check if chart is defined before updating
       if (chart) {
-        chart.data.labels = generateTimeLabels(newData);
-        chart.data.datasets[0].data = newData;
+        chart.data.labels = generateTimeLabels(newTimeLabels); // Update the labels with formatted time labels
+        chart.data.datasets[0].data = newhumidityData;
         chart.update();
       }
     });
 
     function generateTimeLabels(data) {
-      return data.map((log) => {
-        const time = new Date(log.timeStamp);
+      return data.map((timestamp) => {
+        const time = new Date(timestamp);
         const hours = time.getHours().toString().padStart(2, '0');
         const minutes = time.getMinutes().toString().padStart(2, '0');
         return `${hours}:${minutes}`;

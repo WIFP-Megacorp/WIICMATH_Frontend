@@ -21,6 +21,7 @@
         <TemperatureHistory
           v-if="selectedDeviceName && selectedDeviceTemperatureData"
           :temperatureData="selectedDeviceTemperatureData"
+          :timeLabels="selectedDeviceTimeLabels"
           :deviceName="selectedDeviceName"
         />
         <h1 v-else>Select a device to display temperature and humidity history.</h1>
@@ -29,6 +30,7 @@
         <HumidityHistory
           v-if="selectedDeviceName && selectedDeviceHumidityData"
           :humidityData="selectedDeviceHumidityData"
+          :timeLabels="selectedDeviceTimeLabels"
           :deviceName="selectedDeviceName"
         />
       </div>
@@ -47,14 +49,20 @@ export default {
     return {
       devices: [],
       selectedDeviceName: "",
+      selectedDeviceId: "",
     };
   },
   computed: {
     selectedDevice() {
-      return this.devices.find((device) => device.name === this.selectedDeviceName);
+      return this.devices.find((device) => device.ardMAC === this.selectedDeviceId);
     },
     selectedDeviceTemperatureData() {
+      // Return an array of temperature data and timeStamps for the selected device
       return this.selectedDevice?.logs?.map((log) => log.temperature) || [];
+    },
+    selectedDeviceTimeLabels() {
+      // Return an array of timeStamps for the selected device
+      return this.selectedDevice?.logs?.map((log) => log.timeStamp) || [];
     },
     selectedDeviceHumidityData() {
       return this.selectedDevice?.logs?.map((log) => log.humidity) || [];
@@ -62,7 +70,9 @@ export default {
   },
   methods: {
     async handleDeviceSelect(selectedDevice) {
-      this.selectedDeviceName = selectedDevice;
+      this.selectedDeviceName = selectedDevice.deviceName; // Use deviceName to update the selectedDeviceName
+      console.log("Selected device:", selectedDevice.deviceId);
+      this.selectedDeviceId = selectedDevice.deviceId; // Use deviceId to update the selectedDeviceId
     },
     async fetchDevices() {
       try {
@@ -87,9 +97,9 @@ export default {
           device.logs = logs;
 
           // Update the selected device's temperature and humidity data
-          if (device.name === this.selectedDeviceName) {
-            this.selectedDeviceTemperatureData = logs.map((log) => log.temperature);
-            this.selectedDeviceHumidityData = logs.map((log) => log.humidity);
+          if (device.name === this.selectedDeviceId) {
+            // This will automatically trigger the computed properties to update
+            this.selectedDeviceId = device.name;
           }
 
           console.log("Logs for " + device.ardMAC + ":", logs);
@@ -117,11 +127,6 @@ export default {
     },
     startDataRefreshInterval() {
       this.fetchDevices(); // Fetch data immediately
-
-      // Set an interval to fetch data every 5 seconds (adjust the interval as needed)
-      this.dataRefreshInterval = setInterval(() => {
-        this.fetchDevices();
-      }, 5000); // 5 seconds in milliseconds
     },
   },
   created() {
