@@ -1,7 +1,7 @@
 <script>
 import axios from 'axios';
 
-const BASE_URL = 'https://localhost:7005/api';
+const BASE_URL = 'http://162.248.102.181:8001/api';
 
 const ApiService = axios.create({
   baseURL: BASE_URL,
