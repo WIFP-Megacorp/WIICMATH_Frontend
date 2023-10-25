@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { Chart, registerables } from 'chart.js';
 
 // Register Chart.js plugins
@@ -24,6 +24,10 @@ export default {
     let chart = null; // Define chart variable
     console.log('Time Labels:', props.timeLabels);
 
+    let temperatureDataComputed = computed(() => {
+      return props.temperatureData.map((temperature) => temperature / 100);
+    });
+
     onMounted(() => {
       const ctx = lineChartCanvas.value;
 
@@ -34,7 +38,7 @@ export default {
           datasets: [
             {
               label: 'Temperature',
-              data: props.temperatureData, // Use the temperatureData prop
+              data: temperatureDataComputed.value, // Use the temperatureData prop
               borderColor: 'rgb(255, 99, 132)',
               borderWidth: 2,
               fill: false,
@@ -64,10 +68,11 @@ export default {
 
     // Watch for changes in temperatureData prop
     watch(() => [props.temperatureData, props.timeLabels], ([newTemperatureData, newTimeLabels]) => {
+      temperatureDataComputed.value = newTemperatureData.map((temperature) => temperature / 100);
       // Check if chart is defined before updating
       if (chart) {
         chart.data.labels = generateTimeLabels(newTimeLabels); // Update the labels with formatted time labels
-        chart.data.datasets[0].data = newTemperatureData;
+        chart.data.datasets[0].data = temperatureDataComputed.value;
         chart.update();
       }
     });

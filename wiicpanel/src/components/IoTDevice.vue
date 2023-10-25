@@ -27,8 +27,8 @@ export default {
       handler(newLogs) {
         if (Array.isArray(newLogs) && newLogs.length > 0) {
           const mostRecentLog = newLogs[newLogs.length - 1];
-          this.currentTemperature = mostRecentLog.temperature;
-          this.currentHumidity = mostRecentLog.humidity;
+          this.currentTemperature = mostRecentLog.temperature / 100;
+          this.currentHumidity = mostRecentLog.humidity / 100;
         } else {
           // Handle the case where there are no logs
           this.currentTemperature = 0;

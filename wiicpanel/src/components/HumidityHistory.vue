@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { Chart, registerables } from 'chart.js';
 
 // Register Chart.js plugins
@@ -23,6 +23,10 @@ export default {
     let chart = null; // Define chart variable
     console.log('Time Labels:', props.timeLabels);
 
+    let humidityDataComputed = computed(() => {
+      return props.humidityData.map((humidity) => humidity / 100);
+    });
+
     onMounted(() => {
       const ctx = lineChartCanvas.value;
 
@@ -33,7 +37,7 @@ export default {
           datasets: [
             {
               label: 'Humidity',
-              data: props.humidityData, // Use the humidityData prop
+              data: humidityDataComputed.value, // Use the humidityData prop
               borderColor: 'rgb(255, 99, 132)',
               borderWidth: 2,
               fill: false,
@@ -62,11 +66,11 @@ export default {
     });
 
     // Watch for changes in humidityData prop
-    watch(() => [props.humidityData, props.timeLabels], ([newhumidityData, newTimeLabels]) => {
+    watch(() => props.humidityData, (newhumidityData) => {
+      humidityDataComputed.value = newhumidityData.map((humidity) => humidity / 100);
       // Check if chart is defined before updating
       if (chart) {
-        chart.data.labels = generateTimeLabels(newTimeLabels); // Update the labels with formatted time labels
-        chart.data.datasets[0].data = newhumidityData;
+        chart.data.datasets[0].data = humidityDataComputed.value;
         chart.update();
       }
     });
