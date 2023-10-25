@@ -20,5 +20,10 @@ npm run build
 npm run lint
 ```
 
+### If ran locally, add the following extension to chrome
+```
+https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc
+```
+
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
