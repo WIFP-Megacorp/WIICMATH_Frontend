@@ -20,6 +20,12 @@ npm run build
 npm run lint
 ```
 
+### Docker build
+```
+cd wiicpanel
+docker build -t wiicpanel .
+```
+
 ### If ran locally, add the following extension to chrome
 ```
 https://chrome.google.com/webstore/detail/moesif-origin-cors-change/digfbfaphojjndkpccljibejjbppifbc
