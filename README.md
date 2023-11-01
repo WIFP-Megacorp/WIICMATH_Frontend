@@ -1,5 +1,5 @@
-## Vue.js IoT Dashboard Setup Guide
-This guide will walk you through setting up an IoT dashboard using Vue.js to display temperature and humidity charts for multiple devices.
+## Vue.js WIICMATH Dashboard Setup Guide
+This guide will walk you through setting up the WIICMATH dashboard using Vue.js to display temperature and humidity charts for multiple devices.
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/en/) (v10.16.3 or higher)
